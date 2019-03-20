@@ -41,7 +41,8 @@ defmodule JsonRpcToolkit.MixProject do
       {:plug, "~> 1.7", optional: true},
       {:phoenix, "~> 1.4.2", optional: true},
       {:phoenix_pubsub, "~> 1.1.2", optional: true},
-      {:dialyxir, "1.0.0-rc.2", runtime: false, only: [:dev, :test]}
+      {:dialyxir, "1.0.0-rc.2", runtime: false, only: [:dev, :test]},
+      {:ex_doc, ">= 0.0.0", only: :dev}
     ]
   end
 end
