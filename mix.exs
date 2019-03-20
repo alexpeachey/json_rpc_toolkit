@@ -4,7 +4,7 @@ defmodule JsonRpcToolkit.MixProject do
   def project do
     [
       app: :json_rpc_toolkit,
-      version: "0.9.0",
+      version: "0.9.1",
       name: "json_rpc_toolkit",
       description: "A transport agnostic JSON-RPC library with support for Phoenix",
       elixir: "~> 1.8",
@@ -38,9 +38,9 @@ defmodule JsonRpcToolkit.MixProject do
   defp deps do
     [
       {:jason, "~> 1.1"},
-      {:plug, "~> 1.7", optional: true},
-      {:phoenix, "~> 1.4.2", optional: true},
-      {:phoenix_pubsub, "~> 1.1.2", optional: true},
+      {:plug, "~> 1.6", optional: true},
+      {:phoenix, "~> 1.3", optional: true},
+      {:phoenix_pubsub, "~> 1.0", optional: true},
       {:dialyxir, "1.0.0-rc.2", runtime: false, only: [:dev, :test]},
       {:ex_doc, ">= 0.0.0", only: :dev}
     ]
