@@ -1,0 +1,2 @@
+defmodule JSONRPC do
+end
