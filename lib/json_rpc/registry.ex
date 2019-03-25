@@ -24,7 +24,7 @@ defmodule JSONRPC.Registry do
               Enum.map(hd(@scope).scoped, fn {method, chain} ->
                 {unquote(name) <> @namespace_separator <> method,
                  hd(@scope).pre ++ chain ++ hd(@scope).post}
-              end)
+              end) ++ hd(tl(@scope)).scoped
         }
         | tl(tl(@scope))
       ]
