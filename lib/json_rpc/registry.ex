@@ -75,6 +75,8 @@ defmodule JSONRPC.Registry do
                 end)
                 |> Enum.into(%{})
 
+      def registry(), do: @registry
+
       def init(opts), do: opts
 
       def call(%JSONRPC.Request{method: method, halted: false} = request, opts) do
