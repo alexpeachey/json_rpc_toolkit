@@ -79,6 +79,8 @@ defmodule JSONRPC.ActionBuilder do
             end
         end
       end
+
+      defp call_processor(_, request), do: request
     end
   end
 end
