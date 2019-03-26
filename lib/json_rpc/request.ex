@@ -70,6 +70,11 @@ defmodule JSONRPC.Request do
     %{request | error: error}
   end
 
+  @spec set_params(Request.t(), map() | list()) :: Request.t()
+  def set_params(request, params) do
+    %{request | params: params}
+  end
+
   @spec set_result(Request.t(), any()) :: Request.t()
   def set_result(request, result) do
     %{request | result: result}

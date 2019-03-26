@@ -46,8 +46,6 @@ defmodule JSONRPC.ActionBuilder do
       def init(), do: []
       def init(opts), do: opts
 
-      def call(request, opts \\ [])
-
       def call(%JSONRPC.Request{halted: false} = request, _opts) do
         @links
         |> Enum.reverse()
