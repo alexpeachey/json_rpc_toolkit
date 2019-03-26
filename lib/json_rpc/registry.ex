@@ -3,7 +3,7 @@ defmodule JSONRPC.Registry do
     namespace_separator = Keyword.get(opts, :separator, ".")
 
     quote do
-      use JSONRPC.Processor
+      import JSONRPC.Request, except: [new: 1]
       import JSONRPC.Registry
       @scope [%{name: "", pre: [], scoped: [], post: []}]
       @registry %{}

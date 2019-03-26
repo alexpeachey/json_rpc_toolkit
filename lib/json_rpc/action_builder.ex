@@ -1,7 +1,7 @@
 defmodule JSONRPC.ActionBuilder do
   defmacro __using__(_opts) do
     quote do
-      use JSONRPC.Processor
+      import JSONRPC.Request, except: [new: 1]
       import JSONRPC.ActionBuilder
       Module.register_attribute(__MODULE__, :links, accumulate: true)
       @before_compile JSONRPC.ActionBuilder
@@ -43,7 +43,6 @@ defmodule JSONRPC.ActionBuilder do
 
   defmacro __before_compile__(_env) do
     quote do
-      def init(), do: []
       def init(opts), do: opts
 
       def call(%JSONRPC.Request{halted: false} = request, _opts) do
