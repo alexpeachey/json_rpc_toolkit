@@ -1,7 +1,7 @@
 defmodule JSONRPC.ActionBuilder do
   defmacro __using__(_opts) do
     quote do
-      import JSONRPC.Request
+      use JSONRPC.Processor
       import JSONRPC.ActionBuilder
       Module.register_attribute(__MODULE__, :links, accumulate: true)
       @before_compile JSONRPC.ActionBuilder
