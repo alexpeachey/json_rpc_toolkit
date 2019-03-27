@@ -14,11 +14,17 @@ if Code.ensure_loaded?(Plug.Conn) do
 
       registry = Keyword.get(options, :registry)
 
-      [mount: mount, registry: registry]
+      on_error = Keyword.get(options, :on_error)
+
+      [mount: mount, registry: registry, on_error: on_error]
     end
 
     @spec call(Plug.Conn.t(), options()) :: Plug.Conn.t()
-    def call(%{method: "POST", path_info: mount} = conn, mount: mount, registry: registry) do
+    def call(%{method: "POST", path_info: mount} = conn,
+          mount: mount,
+          registry: registry,
+          on_error: on_error
+        ) do
       {body, conn} = get_body(conn)
 
       body
@@ -29,15 +35,17 @@ if Code.ensure_loaded?(Plug.Conn) do
             Request.to_response(apply(registry, :call, [request, [conn: conn]]))
           end)
           |> Serializer.serialize()
-          |> send_response(conn)
+          |> send_response(conn, on_error)
 
         %Request{} = request ->
           registry
           |> apply(:call, [request, [conn: conn]])
           |> Request.to_response()
-          |> send_response(conn)
+          |> send_response(conn, on_error)
 
         %Error{} = error ->
+          error = call_error_handler(on_error, error)
+
           %Response{error: error}
           |> Serializer.serialize()
           |> send_error(conn)
@@ -46,7 +54,7 @@ if Code.ensure_loaded?(Plug.Conn) do
 
     def call(conn, _opts), do: conn
 
-    defp send_response(%{error: nil} = response, conn) do
+    defp send_response(%{error: nil} = response, conn, _) do
       response = Serializer.serialize(response)
 
       conn
@@ -55,12 +63,15 @@ if Code.ensure_loaded?(Plug.Conn) do
       |> halt()
     end
 
-    defp send_response(error, conn) do
-      error = Serializer.serialize(error)
+    defp send_response(%{error: error} = request, conn, on_error) do
+      response =
+        request
+        |> Map.put(:error, call_error_handler(on_error, error))
+        |> Serializer.serialize()
 
       conn
       |> put_resp_content_type("application/json")
-      |> send_resp(400, error)
+      |> send_resp(400, response)
       |> halt()
     end
 
@@ -82,6 +93,12 @@ if Code.ensure_loaded?(Plug.Conn) do
         {:error, _error} ->
           {"", conn}
       end
+    end
+
+    defp call_error_handler(nil, error), do: error
+
+    defp call_error_handler(on_error, error) do
+      on_error.(error)
     end
   end
 end
