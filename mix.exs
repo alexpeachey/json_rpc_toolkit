@@ -4,7 +4,7 @@ defmodule JsonRpcToolkit.MixProject do
   def project do
     [
       app: :json_rpc_toolkit,
-      version: "0.9.9",
+      version: "0.9.10",
       name: "json_rpc_toolkit",
       description: "A transport agnostic JSON-RPC library with support for Phoenix",
       elixir: "~> 1.8",

@@ -18,23 +18,27 @@ defmodule JSONRPC.ActionBuilder do
     quote do
       def method(request, _opts) do
         unquote(arg_name) = request.params
+        process_method_result(request, unquote(block))
+      end
 
-        case unquote(block) do
-          {:error, %JSONRPC.Error{} = error} ->
-            set_error(request, error)
+      def process_method_result(request, {:error, %JSONRPC.Error{} = error}) do
+        set_error(request, error)
+      end
 
-          {:error, error} ->
-            set_error(request, JSONRPC.Error.server_error(-32_000, %{detail: error}))
+      def process_method_result(request, {:error, error}) do
+        set_error(request, JSONRPC.Error.server_error(-32_000, %{detail: error}))
+      end
 
-          {:ok, result} ->
-            set_result(request, result)
+      def process_method_result(request, {:ok, result}) do
+        set_result(request, result)
+      end
 
-          %JSONRPC.Error{} = error ->
-            set_error(request, error)
+      def process_method_result(request, %JSONRPC.Error{} = error) do
+        set_error(request, error)
+      end
 
-          result ->
-            set_result(request, result)
-        end
+      def process_method_result(request, result) do
+        set_result(request, result)
       end
 
       @links {:method, []}
