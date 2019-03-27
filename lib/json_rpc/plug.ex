@@ -54,6 +54,13 @@ if Code.ensure_loaded?(Plug.Conn) do
 
     def call(conn, _opts), do: conn
 
+    defp send_response(response, conn, _) when is_binary(response) do
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(200, response)
+      |> halt()
+    end
+
     defp send_response(%{error: nil} = response, conn, _) do
       response = Serializer.serialize(response)
 
@@ -63,9 +70,9 @@ if Code.ensure_loaded?(Plug.Conn) do
       |> halt()
     end
 
-    defp send_response(%{error: error} = request, conn, on_error) do
+    defp send_response(%{error: error} = response, conn, on_error) do
       response =
-        request
+        response
         |> Map.put(:error, call_error_handler(on_error, error))
         |> Serializer.serialize()
 

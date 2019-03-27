@@ -6,8 +6,10 @@ defmodule JSONRPC.Processor do
     quote do
       @behaviour JSONRPC.Processor
 
+      @spec init(keyword()) :: keyword()
       def init(opts), do: opts
 
+      @spec call(JSONRPC.Request.t(), keyword()) :: JSONRPC.Request.t()
       def call(request, _opts), do: request
 
       defoverridable init: 1, call: 2
