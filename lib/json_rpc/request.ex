@@ -10,7 +10,8 @@ defmodule JSONRPC.Request do
     jsonrpc: "2.0",
     result: nil,
     error: nil,
-    id: nil
+    id: nil,
+    assigns: %{}
   ]
 
   @type t :: %Request{}
@@ -58,6 +59,11 @@ defmodule JSONRPC.Request do
     %Request{}
     |> set_error(Error.invalid_request())
     |> halt()
+  end
+
+  @spec assign(Request.t(), atom(), any()) :: Request.t()
+  def assign(request, key, value) when is_atom(key) do
+    %{request | assigns: Map.put(request.assigns, key, value)}
   end
 
   @spec halt(Request.t()) :: Request.t()
