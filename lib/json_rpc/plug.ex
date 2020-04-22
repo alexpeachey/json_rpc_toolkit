@@ -92,10 +92,10 @@ if Code.ensure_loaded?(Plug.Conn) do
     defp get_body(conn, partial \\ []) do
       case read_body(conn) do
         {:ok, body, conn} ->
-          {IO.iodata_to_binary([partial | body]), conn}
+          {IO.iodata_to_binary([body | partial]), conn}
 
         {:more, body, conn} ->
-          get_body(conn, [partial | body])
+          get_body(conn, [body | partial])
 
         {:error, _error} ->
           {"", conn}
