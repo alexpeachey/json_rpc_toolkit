@@ -70,6 +70,19 @@ defmodule JSONRPC.Registry do
 
   defmacro __before_compile__(_env) do
     quote do
+      @documentation hd(@scope).scoped
+                |> Enum.map(fn {name, [{method, _}]} ->
+                  {name, %{
+                    description: apply(method, :description, []),
+                    params: Enum.map(hd(@scope).pre, fn module -> apply(module, :documented_params, []) end) ++
+                            apply(method, :documented_params, []) ++
+                            Enum.map(hd(@scope).post, fn module -> apply(module, :documented_params, []) end),
+                    result: Enum.map(hd(@scope).pre, fn module -> apply(module, :documented_result, []) end) ++
+                            apply(method, :documented_result, []) ++
+                            Enum.map(hd(@scope).post, fn module -> apply(module, :documented_result, []) end),
+                  }}
+                end)
+
       @registry hd(@scope).scoped
                 |> Enum.map(fn {method, chain} ->
                   {method, hd(@scope).pre ++ chain ++ hd(@scope).post}
@@ -77,6 +90,8 @@ defmodule JSONRPC.Registry do
                 |> Enum.into(%{})
 
       def registry(), do: @registry
+
+      def documentation(), do: @documentation
 
       def init(opts), do: opts
 
