@@ -12,6 +12,24 @@ defmodule JSONRPC.Registry do
     end
   end
 
+  defmacro title(title) do
+    quote do
+      @title unquote(title)
+    end
+  end
+
+  defmacro description(description) do
+    quote do
+      @description unquote(description)
+    end
+  end
+
+  defmacro version(version) do
+    quote do
+      @version unquote(version)
+    end
+  end
+
   defmacro namespace(name, do: block) do
     quote do
       @scope [%{name: unquote(name), pre: [], scoped: [], post: []} | @scope]
@@ -70,18 +88,55 @@ defmodule JSONRPC.Registry do
 
   defmacro __before_compile__(_env) do
     quote do
-      @documentation hd(@scope).scoped
-                |> Enum.map(fn {name, [{method, _}]} ->
-                  {name, %{
-                    description: apply(method, :description, []),
-                    params: Enum.map(hd(@scope).pre, fn module -> apply(module, :documented_params, []) end) ++
-                            apply(method, :documented_params, []) ++
-                            Enum.map(hd(@scope).post, fn module -> apply(module, :documented_params, []) end),
-                    result: Enum.map(hd(@scope).pre, fn module -> apply(module, :documented_result, []) end) ++
-                            apply(method, :documented_result, []) ++
-                            Enum.map(hd(@scope).post, fn module -> apply(module, :documented_result, []) end),
-                  }}
-                end)
+      @documentation %{
+        "$schema": "https://rawgit.com/mzernetsch/jrgen/master/jrgen-spec.schema.json",
+        jrgen: "1.1",
+        jsonrpc: "2.0",
+        info: %{
+          title: @title,
+          description: @description,
+          version: @version
+        },
+        methods: hd(@scope).scoped
+          |> Enum.map(fn {name, [{method, _}]} ->
+            {name, %{
+              summary: apply(method, :summary, []),
+              description: apply(method, :description, []),
+              tags: (fn ->
+                      parts =
+                        name
+                        |> String.split(".")
+                        |> List.delete_at(-1)
+                      parts
+                      |> Enum.reduce([], fn
+                        (part, []) -> [part]
+                        (part, tags) ->
+                          tag =
+                            tags
+                            |> Enum.reverse()
+                            |> hd()
+                            |> Kernel.<>(".#{part}")
+                          tags ++ [tag]
+                      end)
+                    end).(),
+              params: %{
+                type: "object",
+                properties: (Enum.map(hd(@scope).pre, fn {module, _} -> apply(module, :documented_params, []) end) ++
+                            List.wrap(apply(method, :documented_params, [])) ++
+                            Enum.map(hd(@scope).post, fn {module, _} -> apply(module, :documented_params, []) end))
+                            |> Enum.reduce(%{}, fn (p, r) -> Map.merge(r,p) end)
+              },
+              result: (Enum.map(hd(@scope).pre, fn {module, _} -> apply(module, :documented_result, []) end) ++
+                      List.wrap(apply(method, :documented_result, [])) ++
+                      Enum.map(hd(@scope).post, fn {module, _} -> apply(module, :documented_result, []) end))
+                      |> Enum.reject(fn result -> result == %{} end)
+                      |> List.last()
+            }}
+          end)
+          |> Enum.into(%{})
+        }
+        |> Jason.encode!()
+        |> Jason.decode!()
 
       @registry hd(@scope).scoped
                 |> Enum.map(fn {method, chain} ->
