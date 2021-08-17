@@ -4,7 +4,7 @@ defmodule JsonRpcToolkit.MixProject do
   def project do
     [
       app: :json_rpc_toolkit,
-      version: "0.9.14",
+      version: "0.10.0",
       name: "json_rpc_toolkit",
       description: "A transport agnostic JSON-RPC library with support for Phoenix",
       elixir: "~> 1.8",
@@ -21,7 +21,8 @@ defmodule JsonRpcToolkit.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger],
+      mod: {JSONRPC.Application, []}
     ]
   end
 

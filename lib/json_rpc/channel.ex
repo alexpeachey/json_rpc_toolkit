@@ -1,8 +1,7 @@
 if Code.ensure_loaded?(Phoenix.Channel) do
   defmodule JSONRPC.Channel do
     use Phoenix.Channel
-    alias Phoenix.Socket
-    alias JSONRPC.{Parser, Request}
+    alias JSONRPC.{Parser, Request, Response}
 
     def join("jsonrpc", _message, socket) do
       {:ok, socket}
@@ -11,7 +10,7 @@ if Code.ensure_loaded?(Phoenix.Channel) do
     def handle_in("jsonrpc", message, socket) do
       message
       |> Parser.parse()
-      |> handle_message(socket.assigns.connection_params, socket.assigns.registry)
+      |> handle_message(socket.assigns.connection_params, socket.assigns.registry, socket.assigns.timeout)
       |> case do
         [_, _] = responses -> {:reply, {:ok, Enum.reject(responses, &is_nil/1)}, socket}
         %{error: nil} = response -> {:reply, {:ok, response}, socket}
@@ -19,11 +18,20 @@ if Code.ensure_loaded?(Phoenix.Channel) do
       end
     end
 
-    defp handle_message(requests, params, registry) when is_list(requests) do
-      Enum.map(requests, &handle_message(&1, params, registry))
+    def handle_message(requests, params, registry, timeout) when is_list(requests) do
+      Task.Supervisor.async_stream_nolink(
+        JSONRPC.TaskSupervisor,
+        requests,
+        __MODULE__,
+        :handle_message,
+        [params, registry],
+        [ordered: true, timeout: timeout, on_timeout: :kill_task]
+      )
+      |> Enum.zip(requests)
+      |> Enum.map(&Response.finalize_async_response/1)
     end
 
-    defp handle_message(request, params, registry) do
+    def handle_message(request, params, registry, _timeout) do
       registry
       |> apply(:call, [request, [connection_params: params]])
       |> Request.to_response()

@@ -25,4 +25,12 @@ defmodule JSONRPC.Response do
   def new(_) do
     %Response{error: Error.internal_error()}
   end
+
+  def finalize_async_response({{:ok, value}, _}), do: value
+  def finalize_async_response({_, request}) do
+    %Response{
+      id: request.id,
+      error: JSONRPC.Error.internal_error()
+    }
+  end
 end
